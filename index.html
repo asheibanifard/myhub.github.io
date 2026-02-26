@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Armin Sheibanifard — AI Researcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0b0b;
+      --surface: #141010;
+      --border: #251a1a;
+      --accent: #c0392b;
+      --accent-soft: #e05a4a;
+      --accent2: #8a8a8a;
+      --text: #ede8e8;
+      --muted: #6b5f5f;
+      --serif: 'DM Serif Display', Georgia, serif;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(192,57,43,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(192,57,43,0.018) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb {
+      position: fixed;
+      top: -25vh;
+      right: -15vw;
+      width: 65vw;
+      height: 65vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(192,57,43,0.07) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb2 {
+      position: fixed;
+      bottom: -20vh;
+      left: -10vw;
+      width: 40vw;
+      height: 40vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(138,138,138,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* HEADER */
+    header {
+      padding: 5rem 0 4rem;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.6rem, 7vw, 4.8rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+
+    h1 em { font-style: italic; color: var(--accent-soft); }
+
+    .surname {
+      font-family: var(--serif);
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      font-style: italic;
+      color: var(--accent2);
+      letter-spacing: 0.04em;
+      margin-bottom: 1.6rem;
+    }
+
+    .tagline {
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 2.5rem;
+      line-height: 1.8;
+    }
+
+    .links { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+    .links a {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 0.45rem 1rem;
+      border-radius: 2px;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .links a:hover { border-color: var(--accent); color: var(--accent); }
+    .links a.primary { border-color: var(--accent); color: var(--accent); }
+    .links a.primary:hover { background: var(--accent); color: #fff; }
+
+    /* SECTIONS */
+    section {
+      padding: 3.2rem 0;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.8s ease both;
+    }
+
+    section:nth-of-type(1) { animation-delay: 0.10s; }
+    section:nth-of-type(2) { animation-delay: 0.18s; }
+    section:nth-of-type(3) { animation-delay: 0.26s; }
+    section:nth-of-type(4) { animation-delay: 0.34s; }
+    section:nth-of-type(5) { animation-delay: 0.42s; }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 2rem;
+    }
+
+    p { color: #a89e9e; font-size: 0.93rem; }
+
+    /* PUBLICATIONS */
+    .pub { padding: 1.4rem 0; border-top: 1px solid var(--border); }
+    .pub:first-child { border-top: none; }
+
+    .pub-title {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    .pub-authors { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; }
+
+    .pub-meta {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--accent2);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+    }
+
+    .pub-desc { font-size: 0.85rem; color: #7a6e6e; margin-bottom: 0.7rem; }
+
+    .pub-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      padding: 0.18rem 0.55rem;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 2px;
+      margin-right: 0.4rem;
+    }
+
+    .pub-tag.gray { border-color: var(--border); color: var(--accent2); }
+
+    .doi-link {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--accent2);
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .doi-link:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* SKILLS */
+    .skill-group { margin-bottom: 1.6rem; }
+    .skill-group:last-child { margin-bottom: 0; }
+
+    .skill-group-title {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.8rem;
+    }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      padding: 0.35rem 0.8rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: #c0b0b0;
+      transition: border-color 0.2s, color 0.2s;
+      cursor: default;
+    }
+
+    .tag:hover { border-color: var(--accent); color: var(--accent-soft); }
+
+    /* AWARDS */
+    .award {
+      padding: 1.2rem 0;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.4rem 1.5rem;
+      align-items: start;
+    }
+
+    .award:first-child { border-top: none; }
+
+    .award-title { font-size: 0.92rem; color: var(--text); font-weight: 400; }
+
+    .award-year {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      white-space: nowrap;
+      letter-spacing: 0.05em;
+    }
+
+    .award-desc { font-size: 0.8rem; color: var(--muted); grid-column: 1; }
+
+    /* FOOTER */
+    footer { padding: 2.5rem 0; position: relative; z-index: 1; }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 540px) {
+      header { padding: 3rem 0 2.5rem; }
+      .award { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb"></div>
+<div class="orb2"></div>
+
+<div class="container">
+
+  <header>
+    <p class="eyebrow">Ph.D. Candidate · NCCA, Bournemouth University · MSCA Fellow</p>
+    <h1><em>Armin</em></h1>
+    <p class="surname">Sheibanifard</p>
+    <p class="tagline">
+      AI researcher specialising in implicit neural representations, transformer-based architectures, and representation learning — applied to 3D medical imaging for compression, reconstruction, segmentation, and super-resolution.
+    </p>
+    <nav class="links">
+      <a class="primary" href="mailto:asheibanifard@bournemouth.ac.uk">Email</a>
+      <a href="https://linkedin.com/in/asheibanifard" target="_blank">LinkedIn</a>
+      <a href="https://github.com/asheibanifard" target="_blank">GitHub</a>
+      <a href="https://scholar.google.com" target="_blank">Scholar</a>
+      <a href="/cv.pdf" target="_blank">CV ↓</a>
+    </nav>
+  </header>
+
+  <section>
+    <p class="section-label">About</p>
+    <p>
+      I am a Marie Skłodowska-Curie Actions fellow pursuing a fully funded Ph.D. at the National Centre for Computer Animation (NCCA), Bournemouth University. My research designs end-to-end machine learning pipelines for 3D medical image compression and reconstruction — integrating implicit neural representations (INRs), 3D Gaussian Splatting, and vision transformers. I am interested in robust, generalisable AI systems, online adaptation, and efficient model design for real-world clinical deployment.
+    </p>
+  </section>
+
+  <section>
+    <p class="section-label">Publications</p>
+
+    <div class="pub">
+      <p class="pub-title">An End-to-End Implicit Neural Representation Architecture for Medical Volume Data</p>
+      <p class="pub-authors">Sheibanifard, A., Yu, H., Ruan, Z., Zhang, J.J.</p>
+      <p class="pub-meta">PLOS ONE, 20(1): e0314944 · 2025</p>
+      <p class="pub-desc">Integrated pipeline combining downsampling, INR, and super-resolution for multi-parametric MRI. Achieved 97.5% compression ratio with 40.05 dB PSNR and 0.96 SSIM.</p>
+      <span class="pub-tag">INR</span>
+      <span class="pub-tag">Compression</span>
+      <span class="pub-tag">MRI</span>
+      <a class="doi-link" href="https://doi.org/10.1371/journal.pone.0314944" target="_blank">DOI ↗</a>
+    </div>
+
+    <div class="pub">
+      <p class="pub-title">A Novel Implicit Neural Representation for Volume Data</p>
+      <p class="pub-authors">Sheibanifard, A., Yu, H.</p>
+      <p class="pub-meta">Applied Sciences, 13(3242) · 2023</p>
+      <p class="pub-desc">INR framework integrating Lanczos downsampling, SIREN-based networks, and SRDenseNet — reducing training time and GPU memory while improving compression and reconstruction quality.</p>
+      <span class="pub-tag">SIREN</span>
+      <span class="pub-tag">Super-Resolution</span>
+      <span class="pub-tag">Volumetric</span>
+      <a class="doi-link" href="https://doi.org/10.3390/app13053242" target="_blank">DOI ↗</a>
+    </div>
+
+    <div class="pub">
+      <p class="pub-title">Novel XAI Method &amp; Explainable AI for Implicit Neural Representations</p>
+      <p class="pub-authors">Sheibanifard, A. et al.</p>
+      <p class="pub-meta">Under Submission · 2025</p>
+      <p class="pub-desc">Two papers in preparation: a new interpretability approach for modern ML models, and explainability techniques applied to INR-based models to support transparency of learned representations.</p>
+      <span class="pub-tag gray">XAI</span>
+      <span class="pub-tag gray">Interpretability</span>
+      <span class="pub-tag gray">In Preparation</span>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">Skills</p>
+
+    <div class="skill-group">
+      <p class="skill-group-title">Research Expertise</p>
+      <div class="tags">
+        <span class="tag">Implicit Neural Representations</span>
+        <span class="tag">3D Gaussian Splatting</span>
+        <span class="tag">Vision Transformers (ViT, Swin)</span>
+        <span class="tag">Medical Image Compression</span>
+        <span class="tag">Reconstruction &amp; Segmentation</span>
+        <span class="tag">X-ray Enhancement</span>
+        <span class="tag">Multi-Modal Medical Imaging</span>
+      </div>
+    </div>
+
+    <div class="skill-group">
+      <p class="skill-group-title">ML Competencies</p>
+      <div class="tags">
+        <span class="tag">Self-Supervised Learning</span>
+        <span class="tag">Contrastive Learning</span>
+        <span class="tag">Continual &amp; Online Learning</span>
+        <span class="tag">Few-Shot Learning</span>
+        <span class="tag">Semi-Supervised Learning</span>
+        <span class="tag">Deep Representation Learning</span>
+      </div>
+    </div>
+
+    <div class="skill-group">
+      <p class="skill-group-title">Technical Stack</p>
+      <div class="tags">
+        <span class="tag">Python</span>
+        <span class="tag">PyTorch</span>
+        <span class="tag">TensorFlow</span>
+        <span class="tag">MONAI</span>
+        <span class="tag">OpenCV</span>
+        <span class="tag">SimpleITK</span>
+        <span class="tag">NiBabel</span>
+        <span class="tag">Docker</span>
+        <span class="tag">CUDA</span>
+        <span class="tag">Git</span>
+        <span class="tag">Weights &amp; Biases</span>
+        <span class="tag">scikit-learn</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">Honours &amp; Awards</p>
+
+    <div class="award">
+      <p class="award-title">Marie Skłodowska-Curie Fellowship (MSCA)</p>
+      <p class="award-year">2025</p>
+      <p class="award-desc">Competitive EU funding for the final year of PhD research in implicit neural representations and 3D medical imaging.</p>
+    </div>
+
+    <div class="award">
+      <p class="award-title">Doctoral College Outstanding Contribution Award</p>
+      <p class="award-year">2024</p>
+      <p class="award-desc">Recognised by Bournemouth University for service and community leadership within the Doctoral College.</p>
+    </div>
+
+    <div class="award">
+      <p class="award-title">Doctoral College Seminar Grant — Write Wise &amp; AI in Research</p>
+      <p class="award-year">2024</p>
+      <p class="award-desc">Organised two seminar series on academic writing, effective media communication, domain-tailored AI, and future AI trends.</p>
+    </div>
+
+    <div class="award">
+      <p class="award-title">Fully Funded Ph.D. Studentship — NCCA, Bournemouth University</p>
+      <p class="award-year">2022–Now</p>
+      <p class="award-desc">Three-year full scholarship for doctoral studies in AI and 3D medical imaging.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Armin Sheibanifard · NCCA, Bournemouth University · asheibanifard@bournemouth.ac.uk</p>
+  </footer>
+
+</div>
+</body>
+</html>
