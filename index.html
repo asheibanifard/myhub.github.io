@@ -322,6 +322,45 @@
   </section>
 
   <section>
+    <p class="section-label">Live Demo — 3D Gaussian MIP Viewer</p>
+    <p style="margin-bottom:1.2rem;">
+      Interactive real-time Maximum Intensity Projection of 50,000 3D Gaussians
+      representing a fluorescence-microscopy neuron.
+      Rendered with a custom tile-based CUDA rasteriser at 1024×1024.
+      Drag to rotate.
+    </p>
+    <div style="position:relative; width:100%; padding-top:75%; border:1px solid var(--border); border-radius:4px; overflow:hidden; background:var(--surface); margin-bottom:1rem;">
+      <iframe id="viser-frame"
+              style="position:absolute; inset:0; width:100%; height:100%; border:none;"
+              loading="lazy"
+              allowfullscreen>
+      </iframe>
+      <noscript>
+        <img src="assets/neuron_mip_360.gif" alt="MIP 360° rotation"
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;"/>
+      </noscript>
+    </div>
+    <script>
+      (function(){
+        var host = window.location.hostname || 'localhost';
+        document.getElementById('viser-frame').src = 'http://' + host + ':8091';
+      })();
+    </script>
+    <p style="font-size:0.78rem; color:var(--muted);">
+      <span style="font-family:var(--mono); font-size:0.65rem; color:var(--accent);">▶</span>
+      Server command:
+      <code style="font-family:var(--mono); font-size:0.68rem; color:var(--accent2); background:var(--surface); padding:0.2rem 0.5rem; border-radius:2px;">
+        python viser_viewer.py --ckpt ../checkpoints/mip_ckpt/e2e_ep400.pt --port 8091 --res 1024
+      </code>
+    </p>
+    <p style="margin-top:0.6rem;">
+      <img src="assets/neuron_mip_360.gif" alt="MIP 360° rotation"
+           style="max-width:320px; border-radius:4px; border:1px solid var(--border);"/>
+      <span style="display:block; font-size:0.72rem; color:var(--muted); margin-top:0.3rem;">Fallback: pre-rendered 360° GIF</span>
+    </p>
+  </section>
+
+  <section>
     <p class="section-label">Publications</p>
 
     <div class="pub">
