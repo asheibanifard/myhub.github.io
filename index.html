@@ -78,9 +78,68 @@
       z-index: 1;
     }
 
+    /* NAVBAR */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(14,11,11,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      padding: 0;
+      animation: fadeDown 0.5s ease both;
+    }
+
+    .navbar a {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.85rem 1.3rem;
+      position: relative;
+      transition: color 0.25s;
+    }
+
+    .navbar a:hover,
+    .navbar a.active {
+      color: var(--accent);
+    }
+
+    .navbar a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: 60%;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+      transition: transform 0.25s;
+    }
+
+    .navbar a:hover::after,
+    .navbar a.active::after {
+      transform: translateX(-50%) scaleX(1);
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     /* HEADER */
     header {
       padding: 5rem 0 4rem;
+      padding-top: 7rem; /* offset for fixed navbar */
       border-bottom: 1px solid var(--border);
       animation: fadeUp 0.8s ease both;
     }
@@ -146,6 +205,7 @@
       padding: 3.2rem 0;
       border-bottom: 1px solid var(--border);
       animation: fadeUp 0.8s ease both;
+      scroll-margin-top: 3.5rem;
     }
 
     section:nth-of-type(1) { animation-delay: 0.10s; }
@@ -296,9 +356,18 @@
 <div class="orb"></div>
 <div class="orb2"></div>
 
+<nav class="navbar" id="navbar">
+  <a href="#home" class="active">Home</a>
+  <a href="#about">About</a>
+  <a href="#demos">Demos</a>
+  <a href="#publications">Publications</a>
+  <a href="#skills">Skills</a>
+  <a href="#awards">Awards</a>
+</nav>
+
 <div class="container">
 
-  <header>
+  <header id="home">
     <p class="eyebrow">Ph.D. Candidate · NCCA, Bournemouth University · MSCA Fellow</p>
     <h1><em>Armin</em></h1>
     <p class="surname">Sheibanifard</p>
@@ -314,14 +383,14 @@
     </nav>
   </header>
 
-  <section>
+  <section id="about">
     <p class="section-label">About</p>
     <p>
       I am a Marie Skłodowska-Curie Actions fellow pursuing a fully funded Ph.D. at the National Centre for Computer Animation (NCCA), Bournemouth University. My research designs end-to-end machine learning pipelines for 3D medical image compression and reconstruction — integrating implicit neural representations (INRs), 3D Gaussian Splatting, and vision transformers. I am interested in robust, generalisable AI systems, online adaptation, and efficient model design for real-world clinical deployment.
     </p>
   </section>
 
-  <section>
+  <section id="demos">
     <p class="section-label">Live Demo — 3D Gaussian MIP Viewer</p>
     <p style="margin-bottom:1.2rem;">
       Interactive real-time Maximum Intensity Projection of 50,000 3D Gaussians
@@ -368,7 +437,7 @@
     </p>
   </section>
 
-  <section>
+  <section id="publications">
     <p class="section-label">Publications</p>
 
     <div class="pub">
@@ -404,7 +473,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="skills">
     <p class="section-label">Skills</p>
 
     <div class="skill-group">
@@ -451,7 +520,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="awards">
     <p class="section-label">Honours &amp; Awards</p>
 
     <div class="award">
@@ -484,5 +553,40 @@
   </footer>
 
 </div>
+
+<script>
+  // ── Navbar: highlight active section on scroll ──
+  (function() {
+    const navbar = document.getElementById('navbar');
+    const links  = navbar.querySelectorAll('a');
+    const ids    = Array.from(links).map(a => a.getAttribute('href').slice(1));
+    const offset = 80; // navbar height + margin
+
+    function onScroll() {
+      const scrollY = window.scrollY;
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.offsetTop - offset <= scrollY) current = id;
+      }
+      links.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Smooth scroll with offset for fixed navbar
+    links.forEach(a => {
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.getElementById(this.getAttribute('href').slice(1));
+        if (target) {
+          window.scrollTo({ top: target.offsetTop - 50, behavior: 'smooth' });
+        }
+      });
+    });
+  })();
+</script>
 </body>
 </html>
