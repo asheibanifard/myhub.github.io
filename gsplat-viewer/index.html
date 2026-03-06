@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaussian Splat Viewer — FLUOR-GS</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --accent: #58a6ff;
+            --green: #238636;
+            --green-hover: #2ea043;
+            --red: #f85149;
+            --text: #c9d1d9;
+            --muted: #8b949e;
+            --dim: #484f58;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ───── Upload page ───── */
+        .upload-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .logo { font-size: 2rem; }
+        h1 { font-size: 1.8rem; color: var(--accent); }
+        .subtitle { color: var(--muted); margin-bottom: 2rem; }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: border-color 0.2s, background 0.2s;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent);
+            background: var(--surface);
+        }
+        .upload-area .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .upload-area p { color: var(--muted); }
+        .btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.6rem 1.5rem;
+            background: var(--green);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .btn:hover { background: var(--green-hover); }
+        #file-input { display: none; }
+
+        .progress-bar {
+            display: none;
+            width: 100%;
+            height: 6px;
+            background: #21262d;
+            border-radius: 3px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.15s;
+            width: 0%;
+        }
+
+        .info-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 2rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+        .info-box strong { color: var(--text); }
+
+        /* Sample files */
+        h2 { margin-bottom: 1rem; font-size: 1.2rem; color: var(--text); }
+        .sample-list { list-style: none; margin-bottom: 2rem; }
+        .sample-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .sample-list .name { color: var(--accent); font-weight: 500; }
+        .sample-list .meta { color: var(--muted); font-size: 0.85rem; }
+        .btn-view {
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            background: #1f6feb;
+            color: #fff;
+            border: none;
+        }
+        .btn-view:hover { background: #388bfd; }
+
+        /* ───── Viewer page ───── */
+        .viewer-page {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+        }
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        .hud {
+            position: fixed; top: 0; left: 0; right: 0;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.6rem 1rem;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            z-index: 10; pointer-events: none;
+        }
+        .hud > * { pointer-events: auto; }
+        .hud .title {
+            color: #fff; font-size: 0.95rem; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .hud .title a {
+            color: var(--accent); text-decoration: none;
+            margin-right: 0.8rem; font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .hud .title a:hover { text-decoration: underline; }
+        .hud .info { color: var(--muted); font-size: 0.8rem; text-align: right; }
+
+        .loading-overlay {
+            position: fixed; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.85); z-index: 100;
+        }
+        .loading-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 2rem 3rem;
+            text-align: center; min-width: 300px;
+        }
+        .loading-box h2 { color: var(--text); font-size: 1.1rem; margin-bottom: 1rem; }
+        .loading-box progress { width: 100%; height: 8px; appearance: none; }
+        .loading-box progress::-webkit-progress-bar { background: #21262d; border-radius: 4px; }
+        .loading-box progress::-webkit-progress-value { background: var(--accent); border-radius: 4px; }
+        .loading-box .status { color: var(--muted); font-size: 0.8rem; margin-top: 0.6rem; }
+
+        .stats-panel {
+            position: fixed; bottom: 1rem; left: 1rem;
+            background: rgba(22,27,34,0.9); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.8rem 1rem;
+            color: var(--muted); font-size: 0.75rem; line-height: 1.6;
+            z-index: 10; max-width: 280px;
+        }
+        .stats-panel .label { color: var(--accent); }
+
+        .controls-help {
+            position: fixed; bottom: 1rem; right: 1rem;
+            background: rgba(22,27,34,0.9); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            color: var(--dim); font-size: 0.7rem; line-height: 1.5; z-index: 10;
+        }
+        .controls-help kbd {
+            background: #21262d; padding: 0.1rem 0.3rem; border-radius: 3px;
+            color: var(--muted); font-family: monospace;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--dim);
+            font-size: 0.8rem;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════ UPLOAD / HOME PAGE ════════════════ -->
+<div class="upload-page" id="upload-page">
+    <div class="header-row">
+        <div class="logo">🔬</div>
+        <h1>Gaussian Splat Viewer</h1>
+    </div>
+    <p class="subtitle">Upload a <strong>.ply</strong> or <strong>.splat</strong> Gaussian Splatting file to view it in 3D — everything runs in your browser.</p>
+
+    <div class="upload-area" id="drop-zone">
+        <div class="icon">📦</div>
+        <p>Drag &amp; drop a <strong>.ply</strong> or <strong>.splat</strong> file here</p>
+        <button type="button" class="btn" onclick="document.getElementById('file-input').click()">
+            Choose File
+        </button>
+        <input type="file" id="file-input" accept=".ply,.splat">
+        <div class="progress-bar" id="upload-progress">
+            <div class="fill" id="upload-fill"></div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong>How it works:</strong> Your file is loaded and rendered entirely
+        in the browser using WebGL — <em>nothing is uploaded to any server</em>.
+        Supported formats: 3D Gaussian Splatting <code>.ply</code> and <code>.splat</code> files.
+        <br><br>
+        <strong>Tip:</strong> For large files (&gt;100 MB), loading may take a few seconds.
+    </div>
+
+    <div id="sample-section" class="hidden">
+        <h2>Load from URL</h2>
+        <div style="display:flex;gap:0.5rem;margin-bottom:2rem;">
+            <input type="text" id="url-input" placeholder="https://example.com/model.ply"
+                   style="flex:1;padding:0.5rem 0.8rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;">
+            <button class="btn" onclick="loadFromURL()" style="margin-top:0;">Load</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        Built with <a href="https://github.com/huggingface/gsplat.js" target="_blank">gsplat.js</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/asheibanifard/myhub.github.io" target="_blank">Source</a>
+        &nbsp;·&nbsp;
+        FLUOR-GS Project
+    </div>
+</div>
+
+<!-- ════════════════ VIEWER PAGE ════════════════ -->
+<div class="viewer-page" id="viewer-page">
+    <div class="hud">
+        <div class="title">
+            <a id="back-btn">← Back</a>
+            <span id="file-title">model.ply</span>
+        </div>
+        <div class="info" id="fps-counter">Loading…</div>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-box">
+            <h2 id="loading-filename">Loading…</h2>
+            <progress max="100" id="progress" value="0"></progress>
+            <div class="status" id="load-status">Preparing…</div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="stats-panel" id="stats-panel"></div>
+
+    <div class="controls-help">
+        <kbd>Left drag</kbd> Orbit &nbsp;
+        <kbd>Right drag</kbd> Pan &nbsp;
+        <kbd>Scroll</kbd> Zoom<br>
+        <kbd>W/S</kbd> Forward/Back &nbsp;
+        <kbd>A/D</kbd> Left/Right &nbsp;
+        <kbd>Q/E</kbd> Rotate
+    </div>
+</div>
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script type="module">
+    import * as SPLAT from './gsplat/index.es.js';
+
+    // ── State ──
+    let renderer, scene, camera, controls, animFrameId;
+
+    // ── DOM refs ──
+    const uploadPage      = document.getElementById('upload-page');
+    const viewerPage      = document.getElementById('viewer-page');
+    const dropZone        = document.getElementById('drop-zone');
+    const fileInput       = document.getElementById('file-input');
+    const uploadProgress  = document.getElementById('upload-progress');
+    const uploadFill      = document.getElementById('upload-fill');
+    const loadingOverlay  = document.getElementById('loading-overlay');
+    const loadingFilename = document.getElementById('loading-filename');
+    const progressEl      = document.getElementById('progress');
+    const loadStatus      = document.getElementById('load-status');
+    const fpsCounter      = document.getElementById('fps-counter');
+    const fileTitle       = document.getElementById('file-title');
+    const backBtn         = document.getElementById('back-btn');
+    const statsPanel      = document.getElementById('stats-panel');
+    const canvas          = document.getElementById('canvas');
+
+    // ── PLY header parser (replaces Python analyse_ply) ──
+    function analysePLY(buffer) {
+        const headerBytes = new Uint8Array(buffer, 0, Math.min(buffer.byteLength, 102400));
+        const headerText  = new TextDecoder().decode(headerBytes);
+        const endIdx      = headerText.indexOf('end_header\n');
+        if (endIdx < 0) return null;
+
+        const header    = headerText.slice(0, endIdx);
+        const vertMatch = header.match(/element vertex (\d+)/);
+        if (!vertMatch) return null;
+        const nVerts = parseInt(vertMatch[1]);
+
+        let nProps = 0;
+        for (const line of header.split('\n')) {
+            if (line.startsWith('property ')) nProps++;
+        }
+        const rowSize    = nProps * 4;
+        const headerEnd  = endIdx + 'end_header\n'.length;
+        const sampleSize = Math.min(nVerts, 50000);
+        const step       = Math.max(1, Math.floor(nVerts / sampleSize));
+        const view       = new DataView(buffer);
+        let minX = Infinity, minY = Infinity, minZ = Infinity;
+        let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+        let sumX = 0, sumY = 0, sumZ = 0;
+        let count = 0;
+
+        for (let i = 0; i < nVerts && count < sampleSize; i += step) {
+            const off = headerEnd + i * rowSize;
+            if (off + 12 > buffer.byteLength) break;
+            const x = view.getFloat32(off, true);
+            const y = view.getFloat32(off + 4, true);
+            const z = view.getFloat32(off + 8, true);
+            if (!isFinite(x) || !isFinite(y) || !isFinite(z)) continue;
+            minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+            minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
+            sumX += x; sumY += y; sumZ += z;
+            count++;
+        }
+        if (count === 0) return null;
+
+        const extent = [maxX - minX, maxY - minY, maxZ - minZ];
+        const boundingRadius = Math.sqrt(extent[0]**2 + extent[1]**2 + extent[2]**2) / 2;
+        const orbitRadius = boundingRadius * 2.5;
+
+        return {
+            n_verts: nVerts,
+            n_props: nProps,
+            pmean: [sumX/count, sumY/count, sumZ/count],
+            extent: extent,
+            bounding_radius: Math.round(boundingRadius * 10) / 10,
+            orbit_radius: Math.round(orbitRadius * 10) / 10,
+            far_clip: Math.round(orbitRadius * 5 * 10) / 10
+        };
+    }
+
+    // ── Show stats in panel ──
+    function showStats(stats) {
+        if (!stats) { statsPanel.innerHTML = ''; return; }
+        statsPanel.innerHTML = `
+            <div><span class="label">Gaussians:</span> ${stats.n_verts.toLocaleString()}</div>
+            <div><span class="label">Properties:</span> ${stats.n_props}</div>
+            <div><span class="label">Extent:</span> ${stats.extent.map(v=>v.toFixed(0)).join(' × ')}</div>
+            <div><span class="label">Center:</span> (${stats.pmean.map(v=>v.toFixed(0)).join(', ')})</div>
+            <div><span class="label">Orbit radius:</span> ${stats.orbit_radius}</div>
+        `;
+    }
+
+    // ── Cleanup previous viewer session ──
+    function cleanup() {
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+        if (renderer) { renderer.dispose?.(); renderer = null; }
+        scene = null; camera = null; controls = null;
+    }
+
+    // ── Switch pages ──
+    function showViewer(filename) {
+        uploadPage.style.display = 'none';
+        viewerPage.style.display = 'block';
+        loadingOverlay.style.display = 'flex';
+        progressEl.value = 0;
+        loadStatus.textContent = 'Preparing…';
+        fileTitle.textContent = filename;
+        loadingFilename.textContent = `Loading ${filename}`;
+    }
+    function showUpload() {
+        cleanup();
+        viewerPage.style.display = 'none';
+        uploadPage.style.display = 'block';
+        // Reset file input
+        fileInput.value = '';
+    }
+    backBtn.addEventListener('click', showUpload);
+
+    // ── Start render loop ──
+    function startRenderLoop() {
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+        const frame = () => {
+            controls.update();
+            renderer.render(scene, camera);
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime >= 1000) {
+                fpsCounter.textContent = `${frameCount} FPS`;
+                frameCount = 0;
+                lastFpsTime = now;
+            }
+            animFrameId = requestAnimationFrame(frame);
+        };
+        requestAnimationFrame(frame);
+    }
+
+    // ── Setup camera & controls from stats ──
+    function setupCamera(stats) {
+        const farClip     = stats ? stats.far_clip : 5000;
+        const orbitRadius = stats ? stats.orbit_radius : 500;
+        const cx = stats ? stats.pmean[0] : 0;
+        const cy = stats ? stats.pmean[1] : 0;
+        const cz = stats ? stats.pmean[2] : 0;
+
+        camera.data.near = 0.1;
+        camera.data.far  = farClip;
+        const orbitTarget = new SPLAT.Vector3(cx, cy, cz);
+        controls = new SPLAT.OrbitControls(camera, canvas, 0, 0.3, orbitRadius, true, orbitTarget);
+        controls.minZoom   = Math.max(0.1, orbitRadius * 0.02);
+        controls.maxZoom   = orbitRadius * 5;
+        controls.zoomSpeed = Math.max(1, orbitRadius / 200);
+    }
+
+    // ── Handle resize ──
+    function handleResize() {
+        if (renderer) renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    }
+    window.addEventListener('resize', handleResize);
+
+    // ── Core: load a File object ──
+    async function loadFile(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        showViewer(file.name);
+
+        cleanup();
+        renderer = new SPLAT.WebGLRenderer(canvas);
+        scene    = new SPLAT.Scene();
+        camera   = new SPLAT.Camera();
+
+        loadStatus.textContent = 'Parsing file…';
+
+        try {
+            // Read buffer for stats
+            const buffer = await file.arrayBuffer();
+            let stats = null;
+            if (ext === 'ply') {
+                stats = analysePLY(buffer);
+            }
+            showStats(stats);
+
+            // Create a new File from the buffer so gsplat can read it
+            const blob = new File([buffer], file.name);
+
+            loadStatus.textContent = 'Loading into renderer…';
+            if (ext === 'ply') {
+                await SPLAT.PLYLoader.LoadFromFileAsync(blob, scene, (p) => {
+                    progressEl.value = p * 100;
+                    loadStatus.textContent = `${Math.round(p * 100)}%`;
+                });
+            } else {
+                await SPLAT.SplatvLoader.LoadFromFileAsync(blob, scene, null, (p) => {
+                    progressEl.value = p * 100;
+                    loadStatus.textContent = `${Math.round(p * 100)}%`;
+                });
+            }
+        } catch (err) {
+            loadStatus.textContent = 'Error: ' + err.message;
+            console.error(err);
+            return;
+        }
+
+        loadingOverlay.style.display = 'none';
+        setupCamera(stats);
+        handleResize();
+        startRenderLoop();
+    }
+
+    // Make stats available to setupCamera after load
+    let stats = null;
+    const origLoadFile = loadFile;
+    window._loadFile = async function(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        showViewer(file.name);
+
+        cleanup();
+        renderer = new SPLAT.WebGLRenderer(canvas);
+        scene    = new SPLAT.Scene();
+        camera   = new SPLAT.Camera();
+
+        loadStatus.textContent = 'Reading file…';
+
+        try {
+            const buffer = await file.arrayBuffer();
+            stats = null;
+            if (ext === 'ply') {
+                stats = analysePLY(buffer);
+            }
+            showStats(stats);
+
+            const blob = new File([buffer], file.name);
+            loadStatus.textContent = 'Loading into renderer…';
+
+            if (ext === 'ply') {
+                await SPLAT.PLYLoader.LoadFromFileAsync(blob, scene, (p) => {
+                    progressEl.value = p * 100;
+                    loadStatus.textContent = `${Math.round(p * 100)}%`;
+                });
+            } else {
+                // Try .splat loader
+                await SPLAT.Loader.LoadFromFileAsync(blob, scene, (p) => {
+                    progressEl.value = p * 100;
+                    loadStatus.textContent = `${Math.round(p * 100)}%`;
+                });
+            }
+        } catch (err) {
+            loadStatus.textContent = 'Error: ' + err.message;
+            console.error(err);
+            return;
+        }
+
+        loadingOverlay.style.display = 'none';
+        setupCamera(stats);
+        handleResize();
+        startRenderLoop();
+    };
+
+    // ── Load from URL ──
+    window.loadFromURL = async function() {
+        const url = document.getElementById('url-input')?.value?.trim();
+        if (!url) return;
+        const filename = url.split('/').pop() || 'model.ply';
+        showViewer(filename);
+
+        cleanup();
+        renderer = new SPLAT.WebGLRenderer(canvas);
+        scene    = new SPLAT.Scene();
+        camera   = new SPLAT.Camera();
+
+        try {
+            const ext = filename.split('.').pop().toLowerCase();
+            if (ext === 'ply') {
+                await SPLAT.PLYLoader.LoadAsync(url, scene, (p) => {
+                    progressEl.value = p * 100;
+                    loadStatus.textContent = `${Math.round(p * 100)}%`;
+                });
+            } else {
+                await SPLAT.Loader.LoadAsync(url, scene, (p) => {
+                    progressEl.value = p * 100;
+                    loadStatus.textContent = `${Math.round(p * 100)}%`;
+                });
+            }
+        } catch (err) {
+            loadStatus.textContent = 'Error: ' + err.message;
+            console.error(err);
+            return;
+        }
+
+        stats = null; // No stats for URL loads
+        showStats(stats);
+        loadingOverlay.style.display = 'none';
+        setupCamera(stats);
+        handleResize();
+        startRenderLoop();
+    };
+
+    // ── Drag & drop ──
+    ['dragenter', 'dragover'].forEach(e => {
+        dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(e => {
+        dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', ev => {
+        const file = ev.dataTransfer.files[0];
+        if (file) window._loadFile(file);
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) window._loadFile(fileInput.files[0]);
+    });
+</script>
+</body>
+</html>
